@@ -4,6 +4,9 @@ Implementation can be part of TScript34, even of TScript34-P0019.
 Want a name that is separate because it could be embedded
 in other projects.
 
+See also [[https://github.com/TOGoS/JavaCommandRunner36][JavaCommandRunner36]] (JCR36), which can run individual commands
+and is based by some similar ideas.
+
 - [X] Come up with name
   - TOGSOFT-whatever is fine
   - "TOGSOFT-41" or "TScript41"
@@ -35,7 +38,7 @@ I'd like the syntax and semantics to be cleanly seperable.
 e.g. ~"foo ${bar}"~ and ~(cat data:,foo env:bar)~ may be equivalent.
 
 Long names for built-in commands.
-Can be aliased, similar to in TS34.
+Can be aliased, similar to in TS34 or JCR36.
 
 The language is relatively 'stateless';
 variables (which are equivalent to environment variables)
@@ -59,6 +62,39 @@ with the effect of continuing the preceding statement.
 Tokens can be barewords, double-quoted or brace-enclosed strings,
 or variable or sub-expression references (started with '$').
 
+*** Quoting
+
+In attempt to be quote-semantics-compatible with [[https://github.com/TOGoS/TScript34/#common-syntax][other languages in this family]],
+[[https://en.wikipedia.org/wiki/Guillemet][guillaments]] work similarly to braces, with slightly different
+semantics for each type.
+
+Double angle quotes are equivalent to braces.
+
+No single-quoted strings.  Normally I like to reserve them
+to have the same syntax but different semantics to double-quoted strings,
+but this language, being based on shell syntax,
+uses '$' to reference things by name.
+
+Directional double quotes would be like regular double quotes, but nestable.
+This could lead to surprises abot where escaping happens, so
+I will not support it, for now.
+
+*** Special variables
+
+~#~ is also used as the prefix for some special variables.
+
+~$#REST~ is the rest of the script, which is useful when you want a
+new context but don't want a new level of indentation in your script.
+
+*** Resources
+
+The built-in 'cat' command, http://ns.nuke24.net/TScript41/Commands/Cat,
+expects arguments to be URIs, and will resolve them.
+
+Only arguments that are unambiguously *not* URIs, including
+Windows-style paths with a single drive letter where the scheme would
+normally be, will be treated as file paths.
+
 
 ** Syntax Examples
 :PROPERTIES:
@@ -78,14 +114,34 @@ http://ns.nuke24.net/TScript41/Commands/WithCommandAliases {
 	{with-aliases http://ns.nuke24.net/TScript41/Commands/WithCommandAliases}
 	{with-env http://ns.nuke24.net/TScript41/Commands/WithEnv}
 } $#REST
-"foo ${var} $(expression) \n" # Double-quoted strings allow for variable/expression substituion and backslash escapes
-{literal {nestable} quoting style} # Curly braces work like in Tcl
+
+# Double-quoted strings allow for variable/expression substituion and backslash escapes:
+"foo ${var} $(expression) \n"
+
+# brace-enclosed strings are nestable but have no escaping mechanism,
+# similar to those in Tcl.
+{literal {nestable} quoting style}
+
+# Different sub-expressions:
 echo $(expression) # can use $ outside of quoted strings; they become a single argument
 echo $variable # don't need '{}' outside of quoted strings
 echo $*variable # '$*' instead of '$' means 'splat' the variable or expression result.
 echo $*{variable} # Same
 echo $*(echo foo bar baz) # equivalent to `echo foo bar baz`
-echo ${foo}"bar" # NOT ALLOWED!  If you want concatenation, use double-quoted strings.
-foo="bar" baz="quux" {echo $foo} # set variables and run a command (same as JCR36)
+
+# The braces in '${...}' have the same parsing semantics
+# as when used for literal strings; everything between is
+# literally part of the variable name:
+echo ${foo {bar} baz} # References the variable called 'foo {bar} baz'
+
+# Sh-like '=' operator is syntactic sugar for 'WithEnv',
+# to set the values of variables as seen by a sub-command
+foo="bar" baz="quux" {echo $foo}
 foo="bar" $#REST # with foo=bar, execute the rest of the current block
+
+# Some things that are *not* allowed:
+
+echo ${foo}"bar" # NOT ALLOWED!  If you want concatenation, use double-quoted strings.
+
+
 #+end_src
