@@ -37,6 +37,29 @@ e.g. ~"foo ${bar}"~ and ~(cat data:,foo env:bar)~ may be equivalent.
 Long names for built-in commands.
 Can be aliased, similar to in TS34.
 
+The language is relatively 'stateless';
+variables (which are equivalent to environment variables)
+do not change value within a block.
+They can only be overridden for a particular scope.
+
+Like with shell scripting, environment variables and commands are separate namespaces.
+
+** Basic Syntax
+
+'#' followed directly by non-whitespace is a tokenizer/parser directive.
+
+'#' followed by whitespace starts a line comment.
+'#' can be used after non-comment tokens.
+
+Newline can be considered a token, equivalent to ';'
+
+\' token means, for statement-parsing purposes, skip all following newline and '#' tokens,
+with the effect of continuing the preceding statement.
+
+Tokens can be barewords, double-quoted or brace-enclosed strings,
+or variable or sub-expression references (started with '$').
+
+
 ** Example Syntax
 :PROPERTIES:
 :CUSTOM_ID: syntax-examples
@@ -44,19 +67,17 @@ Can be aliased, similar to in TS34.
 
 #+begin_src ts41
 #lang tscript41
-# Line comment.
-# '#' can be used after a statement, too.
-# Newline can be considered a token, equivalent to ';'
-# '\' token means skip all following newline and '#' tokens,
-# with the effect of continuing the statement.
-# "Double-quoted" and {nestable {brace enclosed} } literal strings.
 #{
 	A block comment.  Really a variation on '{' where the token is skipped over.
 	#{
 		Block comments can be nested.
 	}
 }
-with-alias {{echo http://ns.nuke24.net/TScript41/Commands/Echo}} $#REST
+http://ns.nuke24.net/TScript41/Commands/WithCommandAliases {
+	{echo http://ns.nuke24.net/TScript41/Commands/Echo}
+	{with-aliases http://ns.nuke24.net/TScript41/Commands/WithCommandAliases}
+	{with-env http://ns.nuke24.net/TScript41/Commands/WithEnv}
+} $#REST
 "foo ${var} $(expression) \n" # Double-quoted strings allow for variable/expression substituion and backslash escapes
 {literal {nestable} quoting style} # Curly braces work like in Tcl
 echo $(expression) # can use $ outside of quoted strings; they become a single argument
