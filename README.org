@@ -60,7 +60,7 @@ Tokens can be barewords, double-quoted or brace-enclosed strings,
 or variable or sub-expression references (started with '$').
 
 
-** Example Syntax
+** Syntax Examples
 :PROPERTIES:
 :CUSTOM_ID: syntax-examples
 :END:
