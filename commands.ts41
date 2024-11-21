@@ -1,0 +1,61 @@
+# -*- goto-address-mode:-1 -*-
+#
+# An attempt to define some TScript41 commands
+# using Tscript41 syntax.
+#
+# ALL STILL IN THE BRAINSTORMING STAGE - SUBJECT TO CHANGE!
+
+http://ns.nuke24.net/TScript41/Commands/WithCommandAliases {
+	{declare-command http://ns.nuke24.net/TScript41/Commands/DeclareCommand}
+} $#REST
+
+declare-command --name=http://ns.nuke24.net/TScript41/Commands/DeclareCommand --description={
+	Declare a command for documentation purposes.
+	
+	Options:
+	--name=<name>        ; fully-qualified (URI-like) name of the command
+	--description=<text> ; a description of the command
+}
+
+declare-command --name-prefix="http://ns.nuke24.net/TScript41/Commands/DoScript?" --description={
+	Running this command will execute the script that follows the '?'
+}
+
+declare-command --name=http://ns.nuke24.net/TScript41/Commands/Echo --description={
+	print words, separated by <separator> (defauls: one space);
+	-n to omit otherwise-implicit trailing newline:
+	jcr:print [-n] [--ofs=<separator>] [--] [<word> ...]
+	
+	Options:
+	-n                ; Disable implicit trailing newline
+	--ofs=<separator> ; indicate word separator
+	--                ; Stop processing options; remaining options will be printed
+}
+
+declare-command --name=http://ns.nuke24.net/TScript41/Commands/WithCommandAliases --description={
+	Given a set of aliases specified by the first argument,
+	evaluate the block provided as the second argument.
+
+	Options:
+	<a>=<b> ; define <a> as an alias for <b>
+	--      ; stop parsing aliases; the remaining arguments are
+	        ; code blocks to be executed
+
+	Example:
+	http://ns.nuke24.net/TScript41/Commands/WithCommandAliases echo=http://ns.nuke24.net/TScript41/Commands/Echo -- {echo {Hello, world!}}
+}
+
+declare-command --name=http://ns.nuke24.net/TScript41/Commands/WithEnv --description={
+	Given new values for environment variables,
+	execute code blocks.
+
+	Usage:
+	.../WithEnv <var>=<value> <var2>=<value> ... 
+
+	Options:
+	--clear-env
+	--cd=<dir> ; 
+	<a>=<b> ; indicate a new value (<b>) for variable <a>
+	--      ; stop parsing assignments; the remaining arguments
+	        ; are code blocks to be executed
+}

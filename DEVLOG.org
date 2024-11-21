@@ -1,0 +1,83 @@
+** [2024-11-20]
+
+*** Problem: Lack of escape sequences in nested quotes
+
+Using nestable no-escapes quotes, it's impossible to represent
+strings, even deeply nested ones, that contain unbalanced quotes.
+
+In Tcl, you can say
+
+#+begin_src tcl
+puts {foo \} bar}
+#+end_src
+
+which will output
+
+#+begin_example
+foo \} bar
+#+end_example
+
+i.e. Tcl seems to allow '\}' as a way to almost escape the '}',
+except that the backslash is included as part of the string!
+
+
+Potential solutions:
+- Don't bother with ~{...}~ syntax; pass around data URIs or something, instead
+- Multi-token expressions for strings, maybe using square brackets or parentheses, like ~(foo "bar" (baz "quux"))~
+  - Hmm, very lispy!
+  - ~foo $(abc 123)~ would still mean 'evaluate `abc 123` immediately and put its output here', but
+  - ~foo (abc 123)~ would pass the string ~abc 123~ literally to ~foo~.
+  - ~foo (echo $bar)~ would pass the string ~echo $bar~ to ~foo~.
+  - ~foo (echo ")")~ would pass the string ~echo ")"~ to ~foo~
+    - I think?  The parentheses know about tokens, but don't evaluate anything, I guess is the idea.
+      So everything between is parsed, but keeps its original syntax.
+
+*** Problem: Should higher-order commands generally work on commands or scripts?
+
+Should they work like xargs?  ~OPERATOR foo fooArg1 fooArg2~
+
+Or should they take a script as argument?  ~OPERATOR {foo fooArg1 fooArg2 ; ...~
+
+The former is convenient and cute in some cases.
+
+If the former, could have a command that just means 'run each of my arguments as a script'.
+Call it 'do' for short.
+
+~OPERATOR do {foo fooArg1 fooArg2}~.
+
+If the latter...then you have to cram all your scripts into strings.
+Which this language makes easy!
+But that doesn't necessarily mean you always want to have to do that.
+
+How might it work for
+- An xargs-like command
+- If/else
+- While
+- Pipeline
+- Let
+- Letx
+
+#+begin_src ts41
+
+generate-file-list | xargs grep -R "foo"
+
+# 'if' might look for keywords in its argument list;
+# if you don't want to accidentally confuse it, you'd better use 'do'
+# to wrap the sub-scripts
+if some command then do { stuff } else { other stuff }
+
+# using 'do {block}' with while feels a bit more unnatural
+while some command do do { stuff } else do { do this if the loop never runs }
+
+# let's say the 'pipeline' command uses 'pipeTo' as its delimiter
+pipeline command one pipeTo command two pipeTo command three
+
+let foo=bar baz=quux -- some command to run in that context
+
+# I think letx is just impossible
+letx foo=$bar baz=$foo # oops, $foo not defined yet
+
+#+end_src
+
+This style works for things like xargs,
+but for those control structures it sucks!
